@@ -56,4 +56,21 @@ public class MySqlConnection {
     public void closeConnection(Connection connection){
         connections.add(connection);
     }
+
+    public void clearPool(){
+        while (connections.size() > 0){
+            Connection connection = connections.remove();
+            try {
+                if (!connection.isClosed()) {
+                    try {
+                        connection.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

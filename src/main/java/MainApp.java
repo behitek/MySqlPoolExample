@@ -46,6 +46,7 @@ public class MainApp {
             }
         }
         Long endTime = System.currentTimeMillis();
+        mySqlConnection.clearPool();
         return endTime - startTime;
     }
 
