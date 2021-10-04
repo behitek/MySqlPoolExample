@@ -11,36 +11,16 @@ import java.util.Queue;
 import static java.lang.System.exit;
 
 public class MySqlConnection {
-    private static String dbUrl = "jdbc:mysql://" + ConfigParams.getConfig("MYSQL_HOST") + ":" +
+    private String dbUrl = "jdbc:mysql://" + ConfigParams.getConfig("MYSQL_HOST") + ":" +
             ConfigParams.getConfig("MYSQL_PORT") + "/" +
             ConfigParams.getConfig("MYSQL_DB") + "?autoReconnect=true&useSSL=false";
-    private static String username = ConfigParams.getConfig("MYSQL_USER");
-    private static String password = ConfigParams.getConfig("MYSQL_PASS");
-    private static final int MAX_CONN = 10;
-    private static final int MAX_TRY = 3;
-    private static Queue<Connection> connections = new ArrayDeque<>();
+    private String username = ConfigParams.getConfig("MYSQL_USER");
+    private String password = ConfigParams.getConfig("MYSQL_PASS");
+    private final int MAX_CONN = Integer.parseInt(ConfigParams.getConfig("POOL_SIZE"));
+    private final int MAX_TRY = 3;
+    private Queue<Connection> connections = null;
 
-    private static final MySqlConnection instance = new MySqlConnection();
-
-    public static MySqlConnection getInstance(){
-        return instance;
-    }
-
-    static {
-        int failedCount = 0;
-        while (connections.size() < MAX_CONN){
-            if (!addConnection()){
-                failedCount++;
-            }
-            if (failedCount > MAX_TRY){
-                System.out.println("GIVE UP");
-                exit(-1);
-            }
-        }
-        System.out.println("Inited " + connections.size() + " connections!");
-    }
-
-    private static boolean addConnection(){
+    private boolean addConnection(){
         Connection conn = null;
         try {
             Class.forName("com.mysql.jdbc.Driver");
@@ -54,12 +34,26 @@ public class MySqlConnection {
         return false;
     }
 
-    public static Connection getConnection() {
+    public MySqlConnection(){
+        connections = new ArrayDeque<>();
+        int failedCount = 0;
+        while (connections.size() < MAX_CONN){
+            if (!addConnection()){
+                failedCount++;
+            }
+            if (failedCount > MAX_TRY){
+                System.out.println("GIVE UP");
+                exit(-1);
+            }
+        }
+    }
+
+    public Connection getConnection() {
         return connections.remove();
     }
 
 
-    public static void closeConnection(Connection connection){
+    public void closeConnection(Connection connection){
         connections.add(connection);
     }
 }
